@@ -25,7 +25,7 @@ import eu.larkc.csparql.common.RDFTuple;
 public class Event implements Observer {
 
     private static final String DUMMY_ARG_NAME = "dummy_arg";
-    private static final String RANGE = " [RANGE %ds STEP %ds] ";
+    private static final String RANGE = " [RANGE %d%s STEP %d%s] ";
     private static final String FROM_STREAM = " FROM STREAM <http://lambda3.org/aide/rdfstream> ";
     private static final String SELECT = " SELECT ";
     private static final String REGISTER_QUERY_AS = "REGISTER QUERY %s as ";
@@ -33,7 +33,9 @@ public class Event implements Observer {
     private String name;
     private List<String> params;
     private int step;
+    private String stepUnit;
     private int range;
+    private String rangeUnit;
     private ExecutionStrategy type;
     private String sparqlWhere;
     private EventStream out;
@@ -41,7 +43,7 @@ public class Event implements Observer {
     // TODO gonna need to read that from somewhere
     private static final String KNOWN_PREFIXES = "prefix classes: <http://lambda3.org/aide/classes/> "
             + "prefix functions: <http://lambda3.org/aide/functions/> "
-            + "prefix robot: <http://lambda3.org/aide/self/> " + "prefix persons: <http://lambda3.org/aide/persons/> "
+            + "prefix robot: <http://lambda3.org/aide/robot/> " + "prefix persons: <http://lambda3.org/aide/persons/> "
             + "prefix postures: <http://lambda3.org/aide/postures/> "
             + "prefix properties: <http://lambda3.org/aide/properties/> "
             + "prefix rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#> "
@@ -53,12 +55,14 @@ public class Event implements Observer {
 
     private static final TypeMapper typeMapper = TypeMapper.getInstance();
 
-    public Event(String name, List<String> params, int range, int step, ExecutionStrategyType type, String sparqlWhere,
-            EventStream out) throws ParseException {
+    public Event(String name, List<String> params, int range, String rangeUnit, int step, String stepUnit,
+            ExecutionStrategyType type, String sparqlWhere, EventStream out) throws ParseException {
         this.name = name;
         this.params = params;
         this.range = range;
+        this.rangeUnit = rangeUnit;
         this.step = step;
+        this.stepUnit = stepUnit;
         this.type = ExecutionStrategy.getStrategyFromType(type, this);
         this.sparqlWhere = StringUtils.normalizeSpace(sparqlWhere);
         this.out = out;
@@ -97,7 +101,7 @@ public class Event implements Observer {
             result.append(String.format(" (\"dummy\" as ?%s) ", DUMMY_ARG_NAME));
         }
         result.append(FROM_STREAM);
-        result.append(String.format(RANGE, this.range, this.step));
+        result.append(String.format(RANGE, this.range, this.rangeUnit, this.step, this.stepUnit));
         result.append(this.sparqlWhere);
 
         String resultString = StringUtils.normalizeSpace(result.toString());
@@ -169,8 +173,8 @@ public class Event implements Observer {
 
     @Override
     public String toString() {
-        return String.format("%s(params=%s, range=%d, step=%d executionType=%s, sparqlWhere=%s)", name,
-                params.toString(), range, step, type, sparqlWhere);
+        return String.format("%s(params=%s, range=%d%s, step=%d$s, executionType=%s, sparqlWhere=%s)", name,
+                params.toString(), range, rangeUnit, step, stepUnit, type, sparqlWhere);
 
     }
 

@@ -76,12 +76,12 @@ public class RosCEPNode extends AbstractNodeMain {
         this.connectedNode = connectedNode;
         this.log = connectedNode.getLog();
 
-//        final API api = buildRosApi();
+        // final API api = buildRosApi();
 
         this.registerStreamListener();
-        
+
         this.registerAddEvent();
-        
+
         RdfStream inStream = this.registerStreamListener();
 
         this.cep = new CEP();
@@ -107,10 +107,7 @@ public class RosCEPNode extends AbstractNodeMain {
                     public void build(AddEventRequest request, AddEventResponse response) throws ServiceException {
                         aide_messages.Event event = request.getEvent();
                         try {
-                            boolean success = cep.registerEvent(
-                                    new Event(event.getName(), event.getParams(), event.getRange(), event.getStep(),
-                                            getExecutionStrategyFromRosConstant(event.getExecutionType()),
-                                            event.getSparqlWhere(), RosCEPNode.this.outStream));
+                            boolean success = cep.registerEvent(fromMessage(event));
                             log.info("Event successfully added!");
                             response.setSuccess(success);
                         } catch (ParseException e) {
@@ -121,6 +118,12 @@ public class RosCEPNode extends AbstractNodeMain {
 
                     }
                 });
+    }
+
+    private Event fromMessage(aide_messages.Event event) throws ParseException {
+        return new Event(event.getName(), event.getParams(), event.getRange(), event.getRangeUnit(), event.getStep(),
+                event.getStepUnit(), getExecutionStrategyFromRosConstant(event.getExecutionType()),
+                event.getSparqlWhere(), RosCEPNode.this.outStream);
     }
 
     private ExecutionStrategyType getExecutionStrategyFromRosConstant(int constant) {
@@ -154,7 +157,6 @@ public class RosCEPNode extends AbstractNodeMain {
             }
         };
     }
-
 
     private class RosRdfStream extends RdfStream implements MessageListener<RdfGraphStamped> {
 
